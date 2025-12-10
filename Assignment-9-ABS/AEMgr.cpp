@@ -78,6 +78,11 @@ AEState AbstractExecutionMgr::test2()
     NodeID b = getNodeID("b");
     // TODO: put your code in the following braces
     //@{
+    as[p] = AddressValue(getMemObjAddress("malloc"));
+    as.storeValue(p, IntervalValue(0, 0));
+    as[q] = as.loadValue(p);
+    as.storeValue(p, IntervalValue(3, 3));
+    as[b] = as.loadValue(p).getInterval() + IntervalValue(1, 1);
     //@}
 
     as.printAbstractState();
@@ -107,6 +112,12 @@ AEState AbstractExecutionMgr::test3()
     NodeID x = getNodeID("x");
     // TODO: put your code in the following braces
     //@{
+    as[p] = AddressValue(getMemObjAddress("malloc1"));
+    as[q] = AddressValue(getMemObjAddress("malloc2"));
+    as.storeValue(p, as[q]);
+    as.storeValue(q, IntervalValue(10, 10));
+    as[r] = as.loadValue(p);
+    as[x] = as.loadValue(r);
     //@}
 
     as.printAbstractState();
@@ -136,6 +147,13 @@ AEState AbstractExecutionMgr::test4()
     NodeID b = getNodeID("b");
     // TODO: put your code in the following braces
     //@{
+    as[p] = AddressValue(getMemObjAddress("malloc"));
+    as[x] = AddressValue(getGepObjAddress("malloc", 0));
+    as[y] = AddressValue(getGepObjAddress("malloc", 1));
+    as.storeValue(x, IntervalValue(10, 10));
+    as.storeValue(y, IntervalValue(11, 11));
+    as[a] = as.loadValue(x);
+    as[b] = as.loadValue(y);
     //@}
 
     as.printAbstractState();
@@ -174,6 +192,15 @@ AEState AbstractExecutionMgr::test5()
     NodeID z = getNodeID("z");
     // TODO: put your code in the following braces
     //@{
+    as[p] = AddressValue(getMemObjAddress("malloc1"));
+    as[x] = AddressValue(getMemObjAddress("malloc2"));
+    as.storeValue(x, IntervalValue(5, 5));
+    as[q] = AddressValue(getGepObjAddress("malloc1", 0));
+    as.storeValue(q, IntervalValue(10, 10));
+    as[r] = AddressValue(getGepObjAddress("malloc1", 1));
+    as.storeValue(r, as[x]);
+    as[y] = as.loadValue(r);
+    as[z] = as.loadValue(q).getInterval() + as.loadValue(y).getInterval();
     //@}
 
     as.printAbstractState();
@@ -197,6 +224,22 @@ AEState AbstractExecutionMgr::test6()
     NodeID arg = getNodeID("arg");
     // TODO: put your code in the following braces
     //@{
+    as[arg] = IntervalValue(4, 10);
+    as[a] = as[arg].getInterval() + IntervalValue(1, 1);
+    as[b] = IntervalValue(5, 5);
+
+    // Branch where a > 10
+    AEState as_true = as;
+    as_true[a] = as_true[a].getInterval().meet_with(IntervalValue(11, 11));
+    as_true[b] = as_true[a].getInterval();
+
+    // Branch where a <= 10
+    AEState as_false = as;
+    as_false[a] = as_false[a].getInterval().meet_with(IntervalValue(5, 10));
+
+    // Join the two branches
+    as = as_true;
+    as.joinWith(as_false);
     //@}
 
     as.printAbstractState();
@@ -222,6 +265,13 @@ AEState AbstractExecutionMgr::test7()
     NodeID y = getNodeID("y");
     // TODO: put your code in the following braces
     //@{
+    NodeID k = getNodeID("k");
+    // Simulate y = foo(2)
+    as[k] = IntervalValue(2, 2);
+    as[y] = as[k].getInterval();
+    // Simulate x = foo(3)
+    as[k] = IntervalValue(3, 3);
+    as[x] = as[k].getInterval();
     //@}
 
     as.printAbstractState();
@@ -248,6 +298,41 @@ AEState AbstractExecutionMgr::test8()
     NodeID x = getNodeID("x");
     // TODO: put your code in the following braces
     //@{
+    // Entry: x = 20
+    entry_as[x] = IntervalValue(20, 20);
+    head_as = entry_as;
+
+    // Iterate widen_delay times before widening
+    for (u32_t i = 0; i < widen_delay; i++) {
+        // Body: x--
+        body_as = head_as;
+        body_as[x] = body_as[x].getInterval() + IntervalValue(-1, -1);
+
+        // Join at head
+        AEState new_head = entry_as;
+        new_head.joinWith(body_as);
+        head_as = new_head;
+    }
+
+    // Apply widening
+    body_as = head_as;
+    body_as[x] = body_as[x].getInterval() + IntervalValue(-1, -1);
+
+    AEState new_head = entry_as;
+    new_head.joinWith(body_as);
+    head_as = head_as.widening(new_head);
+
+    // Continue iteration after widening
+    body_as = head_as;
+    body_as[x] = body_as[x].getInterval() + IntervalValue(-1, -1);
+
+    new_head = entry_as;
+    new_head.joinWith(body_as);
+    head_as = head_as.widening(new_head);
+
+    // Exit: x <= 0, which means x = 0
+    exit_as = head_as;
+    exit_as[x] = IntervalValue(0, 0);
     //@}
 
     exit_as.printAbstractState();
