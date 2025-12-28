@@ -78,6 +78,7 @@ AEState AbstractExecutionMgr::test2()
     NodeID b = getNodeID("b");
     // TODO: put your code in the following braces
     //@{
+    getNodeID("malloc");
     as[p] = AddressValue(getMemObjAddress("malloc"));
     as.storeValue(p, IntervalValue(0, 0));
     as[q] = as.loadValue(p);
@@ -112,6 +113,8 @@ AEState AbstractExecutionMgr::test3()
     NodeID x = getNodeID("x");
     // TODO: put your code in the following braces
     //@{
+    getNodeID("malloc1");
+    getNodeID("malloc2");
     as[p] = AddressValue(getMemObjAddress("malloc1"));
     as[q] = AddressValue(getMemObjAddress("malloc2"));
     as.storeValue(p, as[q]);
@@ -147,6 +150,7 @@ AEState AbstractExecutionMgr::test4()
     NodeID b = getNodeID("b");
     // TODO: put your code in the following braces
     //@{
+    getNodeID("malloc");
     as[p] = AddressValue(getMemObjAddress("malloc"));
     as[x] = AddressValue(getGepObjAddress("malloc", 0));
     as[y] = AddressValue(getGepObjAddress("malloc", 1));
@@ -192,6 +196,8 @@ AEState AbstractExecutionMgr::test5()
     NodeID z = getNodeID("z");
     // TODO: put your code in the following braces
     //@{
+    getNodeID("malloc1");
+    getNodeID("malloc2");
     as[p] = AddressValue(getMemObjAddress("malloc1"));
     as[x] = AddressValue(getMemObjAddress("malloc2"));
     as.storeValue(x, IntervalValue(5, 5));
