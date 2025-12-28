@@ -230,12 +230,16 @@ AEState AbstractExecutionMgr::test6()
 
     // Branch where a > 10
     AEState as_true = as;
-    as_true[a] = as_true[a].getInterval().meet_with(IntervalValue(11, 11));
+    IntervalValue temp_true = as_true[a].getInterval();
+    temp_true.meet_with(IntervalValue(11, 11));
+    as_true[a] = temp_true;
     as_true[b] = as_true[a].getInterval();
 
     // Branch where a <= 10
     AEState as_false = as;
-    as_false[a] = as_false[a].getInterval().meet_with(IntervalValue(5, 10));
+    IntervalValue temp_false = as_false[a].getInterval();
+    temp_false.meet_with(IntervalValue(5, 10));
+    as_false[a] = temp_false;
 
     // Join the two branches
     as = as_true;
